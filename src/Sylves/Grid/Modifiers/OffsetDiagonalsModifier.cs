@@ -338,10 +338,9 @@ namespace Sylves
             // Only accept identity rotation
             var m = cellTransform.inverse * matrix;
             // Check if the matrix is close to identity (accounting for cellTransform)
-            var diff = m - Matrix4x4.identity;
-            var isIdentity = Mathf.Abs(diff.m00) < 1e-3f && Mathf.Abs(diff.m11) < 1e-3f && Mathf.Abs(diff.m22) < 1e-3f &&
-                             Mathf.Abs(diff.m01) < 1e-3f && Mathf.Abs(diff.m02) < 1e-3f && Mathf.Abs(diff.m10) < 1e-3f &&
-                             Mathf.Abs(diff.m12) < 1e-3f && Mathf.Abs(diff.m20) < 1e-3f && Mathf.Abs(diff.m21) < 1e-3f;
+            var isIdentity = Mathf.Abs(m.m00 - 1) < 1e-3f && Mathf.Abs(m.m11 - 1) < 1e-3f && Mathf.Abs(m.m22 - 1) < 1e-3f &&
+                             Mathf.Abs(m.m01) < 1e-3f && Mathf.Abs(m.m02) < 1e-3f && Mathf.Abs(m.m10) < 1e-3f &&
+                             Mathf.Abs(m.m12) < 1e-3f && Mathf.Abs(m.m20) < 1e-3f && Mathf.Abs(m.m21) < 1e-3f;
             if (isIdentity)
             {
                 rotation = GetIdentity();
