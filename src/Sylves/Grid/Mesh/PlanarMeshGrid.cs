@@ -37,7 +37,6 @@ namespace Sylves
             var n = face.Count;
 
             // Ray casting (crossing number): cast ray in +X from (px, py); odd crossings = inside.
-            // Use strict straddle (a.y < py && b.y > py) || (a.y > py && b.y < py) so a ray through a vertex is counted once.
             int crossings = 0;
             for (var i = 0; i < n; i++)
             {
@@ -48,7 +47,8 @@ namespace Sylves
                 if (IsPointOnSegmentPlanar(px, py, a.x, a.y, b.x, b.y))
                     return true;
 
-                if ((a.y < py && b.y > py) || (a.y > py && b.y < py))
+                // Allow equality on a only to count vertices only once
+                if ((a.y <= py && b.y > py) || (a.y >= py && b.y < py))
                 {
                     var t = (py - a.y) / (b.y - a.y);
                     var x = a.x + t * (b.x - a.x);
