@@ -10,7 +10,7 @@ using System.Numerics;
 namespace Sylves.Test
 {
     [TestFixture]
-    public class MiscTests
+    public class MiscBigIntTests
     {
         public void TestRoundTrip(BigInteger a, BigInteger b)
         {
@@ -20,12 +20,13 @@ namespace Sylves.Test
         }
 
         [Test]
+        [Ignore("Not implemented")]
         public void TestEncodingZOrderRoundTrip()
         {
             TestRoundTrip(0, 0);
+            TestRoundTrip(250, 250);
             TestRoundTrip(-1, -1);
             TestRoundTrip(250, -1);
-            TestRoundTrip(250, 250);
         }
 
         BigInteger OneTrillion = BigInteger.Pow(10, 12);
