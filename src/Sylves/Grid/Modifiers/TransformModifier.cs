@@ -34,9 +34,11 @@ namespace Sylves
 
         protected override IGrid Rebind(IGrid underlying)
         {
-            if (underlying is TransformModifier tm)
+            // Exact type match
+            if (underlying.GetType() == typeof(TransformModifier)) 
             {
                 // Combine transforms.
+                var tm = (TransformModifier)underlying;
                 return new TransformModifier(tm.Underlying, transform * tm.Transform);
             }
             return new TransformModifier(underlying, transform, iTransform);
