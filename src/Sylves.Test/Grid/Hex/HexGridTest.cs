@@ -145,6 +145,16 @@ namespace Sylves.Test
             GridTest.DualMapping(dual, new Cell(8, -4, -4));
         }
 
+
+        [Test]
+        public void TestDiagonal()
+        {
+            var g = new HexGrid(1, HexOrientation.FlatTopped);
+
+            GridTest.GetDiagonals(g, new Cell(0, 0, 0));
+
+        }
+
         [Test]
         public void TestHexBoundCorners()
         {

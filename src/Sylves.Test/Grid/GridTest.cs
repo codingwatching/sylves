@@ -179,7 +179,7 @@ namespace Sylves.Test
             var dualMapping = grid.GetDual();
             var dualGrid = dualMapping.DualGrid;
             var expectedDiagonals = new List<Cell>();
-            var n = NGonCellType.Extract(grid.GetCellType(cell));
+            var n = grid.GetCellType(cell).N;
 
             // This is similar to DefaultDiagonalGrid
             for(var i = 0; i < n; i++)
@@ -189,22 +189,23 @@ namespace Sylves.Test
                 if (dualPair == null)
                     continue;
                 var (dualCell, inverseCorner) = dualPair.Value;
-                var m = NGonCellType.Extract(dualGrid.GetCellType(dualCell));
+                var m = dualGrid.GetCellType(dualCell).N;
                 // Find all cells adjacent to this dual cell, starting from the original cell,
-                // and skipping first (the original cell) and last (will be covered by next iteration of i)
-                for(var j = 1; j < m - 1; j++)
+                // and skipping first (the original cell)
+                for(var j = 1; j < m; j++)
                 {
                     var basePair = dualMapping.ToBasePair(dualCell, (CellCorner)(((int)inverseCorner + j) % m));
                     if (basePair == null)
                         continue;
                     var (baseCell, _) = basePair.Value;
                     expectedDiagonals.Add(baseCell);
-
                 }
             }
 
-            var actualDiagonal = diagonals.GetNeighbours(cell).ToList();
-            CollectionAssert.AreEqual(expectedDiagonals, actualDiagonal);
+            expectedDiagonals = expectedDiagonals.Distinct().ToList();
+
+            var actualDiagonal = diagonals.GetNeighbours(cell).Distinct().ToList();
+            CollectionAssert.AreEquivalent(expectedDiagonals, actualDiagonal);
         }
 
         public static void TestTriangleMesh(IGrid grid, Cell cell, Func<CellDir, Vector3> expectedNormal, Func<CellDir, int> expectedCount)

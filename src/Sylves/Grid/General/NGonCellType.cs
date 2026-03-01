@@ -55,6 +55,8 @@ namespace Sylves
         /// Also returns similar values for SquareCellType and HexCellType,
         /// as they are compatible with NGonCellType.
         /// Other celltypes return null.
+        /// 
+        /// This does *not* work for TriangleCellType, as doesn't work like a normal NGon.
         /// </summary>
         public static Int32? Extract(ICellType cellType)
         {

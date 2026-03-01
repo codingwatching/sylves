@@ -5,6 +5,12 @@ using System.Text;
 
 namespace Sylves
 {
+    /// <summary>
+    /// Handles diagonal grid for ngon grids.
+    /// Each cell dir stores a tuple (i, j) where 0 <= i < m
+    /// If i == 0, then j corresponds to the original cell dir.
+    /// If i > 0, then first we step onto the (j+1) corner in the dual grid, then rotate i corners, and step off the dual grid.
+    /// </summary>
     internal class DefaultDiagonalGrid : BaseModifier
     {
         private readonly Int32 m;
@@ -18,9 +24,21 @@ namespace Sylves
             dualMapping = underlying.GetDual();
         }
 
+        private (int i, int j) Decode(CellDir dir)
+        {
+            var i = ((int)dir) % m;
+            var j = ((int)dir) / m;
+            return (i, j);
+        }
+
+        private CellDir Encode(int i, int j)
+        {
+            return (CellDir)(j * m + i);
+        }
+
         private ICellType GetDiagonalCellType(ICellType cellType)
         {
-            var n = NGonCellType.Extract(cellType).Value;
+            var n = cellType.N;
             return new NGonDiagonalsCellType(n, n * m);
         }
 
@@ -33,7 +51,22 @@ namespace Sylves
         {
             // TODO: We can do better by checking the dual sizes.
             // This is important to allow efficient iteration over dirs when m is sized unreasonably large.
-            return base.GetCellDirs(cell);
+            var cellDirs = Underlying.GetCellDirs(cell);
+            var cellCorners = Underlying.GetCellDirs(cell).GetEnumerator();
+            // Be careful to give a useful iteration order
+            foreach(var dir in cellDirs)
+            {
+                yield return Encode(0, (int)dir);
+
+            }
+            var n = Underlying.GetCellType(cell).N;
+            foreach (var corner in Underlying.GetCellCorners(cell))
+            {
+                for (var i = 1; i < m; i++)
+                {
+                    yield return Encode(i, ((int)corner + n - 1) % n);
+                }
+            }
         }
 
         public override ICellType GetCellType(Cell cell) => GetDiagonalCellType(Underlying.GetCellType(cell));
@@ -42,9 +75,8 @@ namespace Sylves
 
         public override bool TryMove(Cell cell, CellDir dir, out Cell dest, out CellDir inverseDir, out Connection connection)
         {
-            var n = NGonCellType.Extract(Underlying.GetCellType(cell)).Value;
-            var i = ((int)dir) % m;
-            var j = ((int)dir) / m;
+            var n = Underlying.GetCellType(cell).N;
+            var (i, j) = Decode(dir);
 
             if(i == 0)
             {
@@ -60,7 +92,7 @@ namespace Sylves
                 goto fail;
 
             var (dualCell, inverseCorner) = dualPair.Value;
-            var dn = NGonCellType.Extract(dualMapping.DualGrid.GetCellType(dualCell)).Value;
+            var dn = dualMapping.DualGrid.GetCellType(dualCell).N;
 
             // Stops short of a full rotation so we don't double count
             if(i >= dn - 2) 
@@ -78,7 +110,7 @@ namespace Sylves
             if (baseCell == cell)
                 throw new Exception();
 
-            var ddn = NGonCellType.Extract(Underlying.GetCellType(baseCell)).Value;
+            var ddn = Underlying.GetCellType(baseCell).N;
 
             dest = baseCell;
             // Need to pick inverseJ such that corner2 of the step back resolves to inverseCorner1 of this method

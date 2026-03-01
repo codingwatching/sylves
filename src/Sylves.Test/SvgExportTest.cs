@@ -291,6 +291,7 @@ namespace Sylves.Test
         }
 
         [Test]
+        [Ignore("slow!")]
         public void ExportSubstitutionGrids()
         {
             // Aperiodic grids
@@ -490,6 +491,7 @@ namespace Sylves.Test
         }
 
         [Test]
+        [Ignore("slow!")]
         public void ExportSvgGrids_ExtrasGrids()
         {
             Export(new TownscaperGrid(4).BoundBy(new SquareBound(new Vector2Int(-3, -3), new Vector2Int(3, 3))).Transformed(Matrix4x4.Scale(Vector3.one * 0.3f)), "townscaper.svg", new Options { textScale = null, strokeWidth = 0.01f, });

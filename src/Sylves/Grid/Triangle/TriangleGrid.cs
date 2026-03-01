@@ -348,7 +348,7 @@ namespace Sylves
             }
         }
 
-        public IGrid GetDiagonalGrid() => new DefaultDiagonalGrid(this, 3);
+        public IGrid GetDiagonalGrid() => new DefaultDiagonalGrid(this, 4);
 
         // TODO: This needs some thought...
         /*
