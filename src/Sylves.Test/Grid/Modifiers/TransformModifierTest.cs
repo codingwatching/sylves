@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 #if UNITY
 using UnityEngine;
 #endif
@@ -11,11 +11,21 @@ namespace Sylves.Test
     {
 
 
-        [Test]
-        public void TestFindCell()
+        private static readonly object[] FindCellCases =
         {
-            var g = new TransformModifier(new SquareGrid(1), Matrix4x4.TRS(Vector3.right * 100, Quaternion.Euler(0, 90, 0), Vector3.one * 2));
-            GridTest.FindCell(g, new Cell());
+            new object[] { "identity",  Matrix4x4.identity },
+            new object[] { "translate", Matrix4x4.Translate(Vector3.right * 100) },
+            new object[] { "rotate",    Matrix4x4.Rotate(Quaternion.Euler(0, 90, 0)) },
+            new object[] { "scale",     Matrix4x4.Scale(Vector3.one * 2) },
+            new object[] { "combined",  Matrix4x4.TRS(Vector3.right * 100, Quaternion.Euler(0, 90, 0), Vector3.one * 2) },
+        };
+
+        [Test]
+        [TestCaseSource(nameof(FindCellCases))]
+        public void TestFindCell(string _, Matrix4x4 transform)
+        {
+            var g = new TransformModifier(new SquareGrid(1), transform);
+            GridTest.FindCell(g, new Cell(5, 5));
         }
 
         [Test]

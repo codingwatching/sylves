@@ -11,11 +11,13 @@ namespace Sylves
     /// <summary>
     /// Converts a IGrid based in the XY plane to one
     /// in the XZ plane. It does this by rotating Y+ to Z-  (and Z+ to Y+).
-    /// This is different from a transform in that it doesn't rotate the cells, it applies XZCellModifier to them.
+    /// This is different from a regular TransformModifier in that it doesn't rotate the cells, it applies XZCellModifier to them.
     /// </summary>
     public class XZModifier : TransformModifier
     {
+        // iTransform
         private static readonly Matrix4x4 RotateYZ = new Matrix4x4(new Vector4(1, 0, 0, 0), new Vector4(0, 0, 1, 0), new Vector4(0, -1, 0, 0), new Vector4(0, 0, 0, 1));
+        // Transform
         private static readonly Matrix4x4 RotateZY = new Matrix4x4(new Vector4(1, 0, 0, 0), new Vector4(0, 0, -1, 0), new Vector4(0, 1, 0, 0), new Vector4(0, 0, 0, 1));
 
         private ICellType cellType;
@@ -53,10 +55,11 @@ namespace Sylves
 
         public override TRS GetTRS(Cell cell)
         {
-            var ut = base.GetTRS(cell);
-            return new TRS(ut.ToMatrix() * RotateYZ);
-            //return new TRS(ut.Position, ut.Rotation * RotateYZ.rotation, ut.Scale);
-            //return ut;
+            var matrix = Underlying.GetTRS(cell).ToMatrix();
+            var a = RotateZY * matrix;
+            var b = a * RotateYZ;
+            b.SetColumn(3, a.GetColumn(3));
+            return new TRS(b);
         }
 
         public override IEnumerable<ICellType> GetCellTypes()
@@ -78,6 +81,9 @@ namespace Sylves
 
         public override bool FindCell(Matrix4x4 matrix, out Cell cell, out CellRotation rotation)
         {
+            var a = RotateYZ * matrix;
+            var b = a * RotateZY;
+            b.SetColumn(3, a.GetColumn(3));
             return Underlying.FindCell(RotateYZ * matrix * RotateZY, out cell, out rotation);
         }
 
