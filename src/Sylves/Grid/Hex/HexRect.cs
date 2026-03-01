@@ -66,6 +66,7 @@ namespace Sylves
         }
 
         public int Count => Width * Height;
+        Int32 ICollection<Cell>.Count => (Int32)(Width * Height);
 
         public bool IsReadOnly => true;
 
@@ -151,7 +152,7 @@ namespace Sylves
             throw new InvalidOperationException();
         }
 
-        void ICollection<Cell>.CopyTo(Cell[] array, int arrayIndex)
+        void ICollection<Cell>.CopyTo(Cell[] array, Int32 arrayIndex)
         {
             foreach(var cell in this)
             {

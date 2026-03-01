@@ -34,7 +34,7 @@ namespace Sylves
         public static implicit operator EisensteinInteger(Cell v) => new EisensteinInteger(v.x, v.y);
         public static implicit operator Vector2Int(EisensteinInteger e) => new Vector2Int(e.x, e.y);
         public static implicit operator Cell(EisensteinInteger e) => new Cell(e.x, e.y, -e.x - e.y);
-        public static implicit operator Complex(EisensteinInteger e) => new Complex(e.x + 0.5 * e.y, 0.5 * Mathf.Sqrt(3) * e.y);
+        public static implicit operator Complex(EisensteinInteger e) => new Complex((double)e.x + 0.5 * (double)e.y, 0.5 * Mathf.Sqrt(3) * (double)e.y);
         
 
         public static EisensteinInteger operator +(EisensteinInteger a, EisensteinInteger b) => new EisensteinInteger(a.x + b.x, a.y + b.y);
@@ -43,7 +43,7 @@ namespace Sylves
         public static bool operator ==(EisensteinInteger a, EisensteinInteger b) => a.x == b.x && a.y == b.y;
         public static bool operator !=(EisensteinInteger a, EisensteinInteger b) => a.x != b.x || a.y != b.y;
         public override bool Equals(object obj) => obj is EisensteinInteger e && this == e;
-        public override int GetHashCode() => (x, y).GetHashCode();
+        public override Int32 GetHashCode() => (x, y).GetHashCode();
 
         public override string ToString() => $"({x}, {y})";
 
@@ -53,9 +53,22 @@ namespace Sylves
         {
             var bNorm = b.Norm();
             var unscaled = a * new EisensteinInteger(b.x + b.y, -b.y);
+#if BIGINT
+            static BigInteger RoundDiv(BigInteger n, BigInteger d)
+            {
+                var q = BigInteger.DivRem(n, d, out var r);
+                if (BigInteger.Abs(r) * 2 >= BigInteger.Abs(d))
+                    q += n.Sign == d.Sign ? BigInteger.One : BigInteger.MinusOne;
+                return q;
+            }
+            return new EisensteinInteger(
+                RoundDiv(unscaled.x, bNorm),
+                RoundDiv(unscaled.y, bNorm));
+#else
             return new EisensteinInteger(
                 (int)Math.Round((double)unscaled.x / bNorm),
                 (int)Math.Round((double)unscaled.y / bNorm));
+#endif
         }
 
         /// <summary>

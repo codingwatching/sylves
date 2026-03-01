@@ -24,14 +24,14 @@ namespace Sylves
             dualMapping = underlying.GetDual();
         }
 
-        private (int i, int j) Decode(CellDir dir)
+        private (Int32 i, Int32 j) Decode(CellDir dir)
         {
-            var i = ((int)dir) % m;
-            var j = ((int)dir) / m;
+            var i = ((Int32)dir) % m;
+            var j = ((Int32)dir) / m;
             return (i, j);
         }
 
-        private CellDir Encode(int i, int j)
+        private CellDir Encode(Int32 i, Int32 j)
         {
             return (CellDir)(j * m + i);
         }
