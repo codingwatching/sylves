@@ -162,6 +162,7 @@ namespace Sylves
             }
         }
 
+        // Returns an offset through the center of the layer
         private Vector3 GetOffset(int layer)
         {
             return (planarPrismOptions.LayerOffset + planarPrismOptions.LayerHeight * layer) * Vector3.forward;
@@ -571,11 +572,11 @@ namespace Sylves
         {
             if(bound is PlanarPrismBound ppb)
             {
-                if(Underlying.GetBoundAabb(bound) is Aabb aabb)
+                if(Underlying.GetBoundAabb(ppb.PlanarBound) is Aabb aabb)
                 {
                     return Aabb.FromMinMax(
-                        aabb.Min + GetOffset(ppb.MinLayer),
-                        aabb.Max + GetOffset(ppb.MexLayer));
+                        aabb.Min + GetOffset(ppb.MinLayer - 0.5f),
+                        aabb.Max + GetOffset(ppb.MexLayer + 0.5f));
                 }
             }
             return null;
@@ -700,7 +701,7 @@ namespace Sylves
         {
             var (uCell, layer) = Split(cell);
             var aabb = Underlying.GetAabb(uCell);
-            return Aabb.FromMinMax(aabb.Min + GetOffset(layer), aabb.Max + GetOffset(layer + 1));
+            return Aabb.FromMinMax(aabb.Min + GetOffset(layer - 0.5f), aabb.Max + GetOffset(layer + 0.5f));
         }
 
         public Aabb GetAabb(IEnumerable<Cell> cells)
@@ -725,7 +726,7 @@ namespace Sylves
             }
             if (first)
                 throw new Exception("Enumerable empty");
-            return Aabb.FromMinMax(aabb.Min + GetOffset(minLayer), aabb.Max + GetOffset(maxLayer + 1));
+            return Aabb.FromMinMax(aabb.Min + GetOffset(minLayer - 0.5f), aabb.Max + GetOffset(maxLayer + 0.5f));
         }
 
         #endregion
