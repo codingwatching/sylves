@@ -44,7 +44,7 @@ namespace Sylves
 
     // Doesn't use BaseModifier as so much has changed, everything needs overriding.
     /// <summary>
-    /// Takes a 2d planar grid, and extends it into multiple layers along the third the dimension.
+    /// Takes a 2d planar grid, and extends it into multiple layers along the third dimension.
     /// </summary>
     public class PlanarPrismModifier : IGrid
     {
@@ -799,7 +799,101 @@ namespace Sylves
         }
         public IEnumerable<RaycastInfo> Raycast(Vector3 origin, Vector3 direction, float maxDistance = float.PositiveInfinity)
         {
-            throw new NotImplementedException();
+            var planarOrigin = new Vector3(origin.x, origin.y, 0);
+            var planarDirection = new Vector3(direction.x, direction.y, 0);
+
+            var dz = direction.z;
+            var layerHeight = planarPrismOptions.LayerHeight;
+            var layerOffset = planarPrismOptions.LayerOffset;
+
+            var layerStep = dz > 0 ? 1 : dz < 0 ? -1 : 0;
+
+            int currentLayer = GetLayer(origin);
+            Cell prevUCell = default;
+            bool hasPrevUCell = false;
+
+            foreach (var info in underlying.Raycast(planarOrigin, planarDirection, maxDistance))
+            {
+                float t = info.distance;
+                int layerAtT = GetLayer(origin + t * direction);
+
+                if (hasPrevUCell && currentLayer != layerAtT)
+                {
+                    var cellType = underlying.GetCellType(prevUCell);
+                    GetAxialDirs(cellType, out var fwd, out var bck);
+                    var layerCellDir = dz > 0 ? bck : fwd;
+
+                    while (currentLayer != layerAtT)
+                    {
+                        float boundaryZ = layerOffset + layerHeight * (currentLayer + 0.5f * layerStep);
+                        float tBoundary = (boundaryZ - origin.z) / dz;
+
+                        if (tBoundary > t)
+                            break;
+
+                        currentLayer += layerStep;
+
+                        if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MaxLayer))
+                            yield break;
+
+                        yield return new RaycastInfo
+                        {
+                            cell = Combine(prevUCell, currentLayer),
+                            point = origin + tBoundary * direction,
+                            cellDir = layerCellDir,
+                            distance = tBoundary,
+                        };
+                    }
+                }
+
+                currentLayer = layerAtT;
+
+                if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MaxLayer))
+                    yield break;
+
+                var prismInfo = PrismInfo.Get(underlying.GetCellType(info.cell));
+
+                yield return new RaycastInfo
+                {
+                    cell = Combine(info.cell, currentLayer),
+                    point = origin + t * direction,
+                    cellDir = info.cellDir.HasValue ? prismInfo.BaseToPrism(info.cellDir.Value) : (CellDir?) null,
+                    distance = t,
+                };
+
+                prevUCell = info.cell;
+                hasPrevUCell = true;
+            }
+
+            // After the last 2D result, yield remaining layer crossings
+            if (hasPrevUCell && layerStep != 0)
+            {
+                var cellType = underlying.GetCellType(prevUCell);
+                GetAxialDirs(cellType, out var fwd, out var bck);
+                var layerCellDir = dz > 0 ? bck : fwd;
+
+                while (true)
+                {
+                    float boundaryZ = layerOffset + layerHeight * (currentLayer + 0.5f * layerStep);
+                    float tBoundary = (boundaryZ - origin.z) / dz;
+
+                    if (tBoundary > maxDistance)
+                        break;
+
+                    currentLayer += layerStep;
+
+                    if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MaxLayer))
+                        yield break;
+
+                    yield return new RaycastInfo
+                    {
+                        cell = Combine(prevUCell, currentLayer),
+                        point = origin + tBoundary * direction,
+                        cellDir = layerCellDir,
+                        distance = tBoundary,
+                    };
+                }
+            }
         }
         #endregion
         #region Symmetry

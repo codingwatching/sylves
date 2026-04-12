@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 #if UNITY
 using UnityEngine;
@@ -107,6 +108,57 @@ namespace Sylves.Test
         {
             var g = new PlanarPrismModifier(new SquareGrid(1));
             GridTest.TestTriangleMesh(g, new Cell(), dir => ((CubeDir)dir).Forward(), _ => 2);
+        }
+
+        [Test]
+        public void TestRaycast()
+        {
+            // LayerOffset=0.5 aligns PlanarPrismModifier layers with CubeGrid z-cells
+            var cube = new CubeGrid(1);
+            var prism = new PlanarPrismModifier(
+                new SquareGrid(1),
+                new PlanarPrismOptions { LayerHeight = 1, LayerOffset = 0.5f });
+
+            var origin = new Vector3(0.5f, 0.5f, 0.5f);
+
+            // Lateral ray (no layer crossings)
+            //CompareRaycast(cube, prism, origin, new Vector3(2, 1, 0), 1);
+
+            //// Pure z ray (only layer crossings)
+            //CompareRaycast(cube, prism, origin, new Vector3(0, 0, 1), 5);
+            //CompareRaycast(cube, prism, origin, new Vector3(0, 0, -1), 5);
+
+            //// Diagonal rays (both 2D and layer crossings)
+            //CompareRaycast(cube, prism, origin, new Vector3(1.1f, 0.7f, 1.3f), 3);
+            //CompareRaycast(cube, prism, origin, new Vector3(1.1f, 0.7f, -1.3f), 3);
+            //CompareRaycast(cube, prism, origin, new Vector3(3, 1, 2), 2);
+
+            //// Ray starting outside origin cell
+            //CompareRaycast(cube, prism, new Vector3(-0.3f, 0.5f, 0.5f), new Vector3(1, 0, 0), 5);
+            CompareRaycast(cube, prism, new Vector3(-0.3f, 0.5f, 0.5f), new Vector3(1, 0.3f, 0.7f), 5);
+        }
+
+        private void CompareRaycast(IGrid cube, IGrid prism, Vector3 origin, Vector3 direction, float maxDistance)
+        {
+            var cubeResults = cube.Raycast(origin, direction, maxDistance).ToList();
+            var prismResults = prism.Raycast(origin, direction, maxDistance).ToList();
+
+            Assert.AreEqual(cubeResults.Count, prismResults.Count,
+                $"Ray ({origin}, {direction}, {maxDistance}): count mismatch.\n" +
+                $"  Cube:  [{string.Join(", ", cubeResults.Select(r => r.cell))}]\n" +
+                $"  Prism: [{string.Join(", ", prismResults.Select(r => r.cell))}]");
+
+            for (int i = 0; i < cubeResults.Count; i++)
+            {
+                Assert.AreEqual(cubeResults[i].cell, prismResults[i].cell,
+                    $"Ray ({origin}, {direction}, {maxDistance}): cell mismatch at [{i}]");
+                // Map prism cellDir (SquareDir-valued for lateral faces) to CubeDir for comparison
+                var prismDir = prismResults[i].cellDir;
+                Assert.AreEqual(cubeResults[i].cellDir, prismDir,
+                    $"Ray ({origin}, {direction}, {maxDistance}): cellDir mismatch at [{i}]");
+                Assert.That(prismResults[i].distance, Is.EqualTo(cubeResults[i].distance).Within(0.001f),
+                    $"Ray ({origin}, {direction}, {maxDistance}): distance mismatch at [{i}]");
+            }
         }
     }
 }
