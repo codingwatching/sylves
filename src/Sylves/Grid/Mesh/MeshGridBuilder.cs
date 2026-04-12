@@ -159,7 +159,7 @@ namespace Sylves
 
         private static void BuildCellData(MeshData data, MeshPrismGridOptions meshPrismGridOptions, IDictionary<Cell, DataDrivenCellData> layerCellData, IDictionary<Cell, DataDrivenCellData> cellData)
         {
-            for (var layer = meshPrismGridOptions.MinLayer; layer < meshPrismGridOptions.MaxLayer; layer++)
+            for (var layer = meshPrismGridOptions.MinLayer; layer < meshPrismGridOptions.MexLayer; layer++)
             {
                 for (var submesh = 0; submesh < data.subMeshCount; submesh++)
                 {
@@ -233,7 +233,7 @@ namespace Sylves
             Dictionary<(Cell, CellDir), (Cell, CellDir, Connection)> layerMoves,
             IDictionary<(Cell, CellDir), (Cell, CellDir, Connection)> moves)
         {
-            for (var layer = meshPrismGridOptions.MinLayer; layer < meshPrismGridOptions.MaxLayer; layer++)
+            for (var layer = meshPrismGridOptions.MinLayer; layer < meshPrismGridOptions.MexLayer; layer++)
             {
                 foreach (var kv in layerMoves)
                 {
@@ -249,10 +249,10 @@ namespace Sylves
             {
                 var cellType = kv.Value.CellType;
                 var prismInfo = PrismInfo.Get(cellType);
-                for (var layer = meshPrismGridOptions.MinLayer; layer < meshPrismGridOptions.MaxLayer; layer++)
+                for (var layer = meshPrismGridOptions.MinLayer; layer < meshPrismGridOptions.MexLayer; layer++)
                 {
                     var cell = new Cell(kv.Key.x, kv.Key.y, layer);
-                    if (cell.z < meshPrismGridOptions.MaxLayer - 1)
+                    if (cell.z < meshPrismGridOptions.MexLayer - 1)
                     {
                         moves.Add((cell, prismInfo.ForwardDir), (cell + new Vector3Int(0, 0, 1), prismInfo.BackDir, new Connection()));
                     }

@@ -21,7 +21,7 @@ namespace Sylves
             LayerHeight = 2 * innerRadius / h,
             LayerOffset = -2 * innerRadius / h * (h - 1) / 2,
             MinLayer = 0,
-            MaxLayer = h,
+            MexLayer = h,
         };
 
         private static DataDrivenData MakeData(Int32 w, Int32 h, float outerRadius, float innerRadius)

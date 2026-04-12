@@ -23,13 +23,13 @@ namespace Sylves.Test
             {
                 LayerHeight = 1,
                 MinLayer = 0,
-                MaxLayer = 2,
+                MexLayer = 2,
             };
             xzOptions = new MeshPrismGridOptions
             {
                 LayerHeight = 1,
                 MinLayer = 0,
-                MaxLayer = 2,
+                MexLayer = 2,
                 UseXZPlane = true,
             };
         }
@@ -220,7 +220,7 @@ namespace Sylves.Test
             var grid = new MeshPrismGrid(TestMeshes.TrianglePlane, new Sylves.MeshPrismGridOptions
             {
                 MinLayer = 0,
-                MaxLayer = 1,
+                MexLayer = 1,
                 LayerHeight = 1,
                 LayerOffset = 0,
                 //UseXZPlane = true,
@@ -255,7 +255,7 @@ namespace Sylves.Test
             var grid = new MeshPrismGrid(meshData, new Sylves.MeshPrismGridOptions
             {
                 MinLayer = 0,
-                MaxLayer = 1,
+                MexLayer = 1,
                 LayerHeight = 1,
                 LayerOffset = 0,
             });
@@ -270,7 +270,7 @@ namespace Sylves.Test
             var h = new HexGrid(1, bound: HexBound.Hexagon(0));
             var meshData = h.ToMeshData();
             meshData.RecalculateNormals();
-            var g = new MeshPrismGrid(meshData, new MeshPrismGridOptions() { MaxLayer = 2});
+            var g = new MeshPrismGrid(meshData, new MeshPrismGridOptions() { MexLayer = 2});
 
             GridTest.FindCell(g, new Cell());
 
@@ -302,7 +302,7 @@ namespace Sylves.Test
                 LayerHeight = 1,
                 LayerOffset = 0,
                 MinLayer = 0,
-                MaxLayer = 1,
+                MexLayer = 1,
             });
             var cell = new Cell(0, 0, 0);
             var corners = g.GetCellType(cell).GetCellCorners().ToList();

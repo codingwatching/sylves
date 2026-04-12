@@ -56,10 +56,10 @@ namespace Sylves
             var dualGrid = new MeshPrismGrid(dmb.DualMeshData, new MeshPrismGridOptions(meshPrismOptions)
             {
                 MinLayer = meshPrismOptions.MinLayer,
-                MaxLayer = meshPrismOptions.MaxLayer + 1,
+                MexLayer = meshPrismOptions.MexLayer + 1,
                 LayerOffset = meshPrismOptions.LayerOffset - 0.5f * meshPrismOptions.LayerHeight,
             });
-            return new DualMapping(this, dualGrid, dmb.Mapping, meshPrismOptions.MinLayer, meshPrismOptions.MaxLayer);
+            return new DualMapping(this, dualGrid, dmb.Mapping, meshPrismOptions.MinLayer, meshPrismOptions.MexLayer);
         }
 
         private class DualMapping : BasicDualMapping
@@ -412,7 +412,7 @@ namespace Sylves
         {
             var meshCellData = (MeshCellData)CellData[cell];
             var minMeshOffset = meshPrismOptions.MinLayer * meshPrismOptions.LayerHeight + meshPrismOptions.LayerOffset;
-            var maxMeshOffset = meshPrismOptions.MaxLayer * meshPrismOptions.LayerHeight + meshPrismOptions.LayerOffset;
+            var maxMeshOffset = meshPrismOptions.MexLayer * meshPrismOptions.LayerHeight + meshPrismOptions.LayerOffset;
 
             var face = meshCellData.Face;
             var cellMin = meshData.vertices[face[0]];

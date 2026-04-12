@@ -17,16 +17,21 @@ namespace Sylves
     public class PlanarPrismBound : IBound
     {
         public int MinLayer { get; set; }
-        public int MaxLayer { get; set; }
+        public int MexLayer { get; set; }
 
         public IBound PlanarBound { get; set; }
+
+        public int MaxLayer {
+            get => MexLayer - 1;
+            set => MexLayer = value + 1;
+        }
 
         public PlanarPrismBound Intersect(PlanarPrismBound other, IGrid planarGrid)
         {
             return new PlanarPrismBound
             {
                 MinLayer = Math.Max(MinLayer, other.MinLayer),
-                MaxLayer = Math.Min(MaxLayer, other.MaxLayer),
+                MexLayer = Math.Min(MexLayer, other.MexLayer),
                 PlanarBound = planarGrid.IntersectBounds(PlanarBound, other.PlanarBound),
             };
         }
@@ -36,7 +41,7 @@ namespace Sylves
             return new PlanarPrismBound
             {
                 MinLayer = Math.Min(MinLayer, other.MinLayer),
-                MaxLayer = Math.Max(MaxLayer, other.MaxLayer),
+                MexLayer = Math.Max(MexLayer, other.MexLayer),
                 PlanarBound = planarGrid.UnionBounds(PlanarBound, other.PlanarBound),
             };
         }
@@ -53,7 +58,7 @@ namespace Sylves
         private readonly PlanarPrismBound bound;
 
         public PlanarPrismModifier(IGrid underlying, PlanarPrismOptions planarPrismOptions, int minLayer, int maxLayer)
-            : this(underlying, planarPrismOptions, new PlanarPrismBound { MinLayer = minLayer, MaxLayer = maxLayer, PlanarBound = null })
+            : this(underlying, planarPrismOptions, new PlanarPrismBound { MinLayer = minLayer, MexLayer = maxLayer, PlanarBound = null })
         {
         }
 
@@ -253,7 +258,7 @@ namespace Sylves
                 }, bound == null ? null : new PlanarPrismBound
                 {
                     MinLayer = bound.MinLayer,
-                    MaxLayer = bound.MaxLayer + 1,
+                    MexLayer = bound.MexLayer + 1,
                     PlanarBound = dm.DualGrid.GetBound(),
                 });
 
@@ -342,7 +347,7 @@ namespace Sylves
             CheckBounded();
             foreach (var cell in underlying.GetCells())
             {
-                for (var layer = bound.MinLayer; layer < bound.MaxLayer; layer++)
+                for (var layer = bound.MinLayer; layer < bound.MexLayer; layer++)
                 {
                     yield return Combine(cell, layer);
                 }
@@ -364,7 +369,7 @@ namespace Sylves
                 layer += (isUp ? 1 : -1);
                 dest = Combine(uCell, layer);
                 connection = new Connection();
-                return bound == null ? true : bound.MinLayer <= layer && layer < bound.MaxLayer;
+                return bound == null ? true : bound.MinLayer <= layer && layer < bound.MexLayer;
             }
             else
             {
@@ -462,20 +467,20 @@ namespace Sylves
             get
             {
                 CheckBounded();
-                return underlying.IndexCount * (bound.MaxLayer - bound.MinLayer);
+                return underlying.IndexCount * (bound.MexLayer - bound.MinLayer);
             }
         }
 
         public virtual int GetIndex(Cell cell) {
             CheckBounded();
             var (ucell, layer) = Split(cell);
-            return underlying.GetIndex(ucell) * (bound.MaxLayer - bound.MinLayer) + (layer - bound.MinLayer);
+            return underlying.GetIndex(ucell) * (bound.MexLayer - bound.MinLayer) + (layer - bound.MinLayer);
         }
 
         public virtual Cell GetCellByIndex(int index)
         {
-            var uindex = index / (bound.MaxLayer - bound.MinLayer);
-            var layer = index % (bound.MaxLayer - bound.MinLayer) + bound.MinLayer;
+            var uindex = index / (bound.MexLayer - bound.MinLayer);
+            var layer = index % (bound.MexLayer - bound.MinLayer) + bound.MinLayer;
             var ucell = underlying.GetCellByIndex(uindex);
             return Combine(ucell, layer);
         }
@@ -510,7 +515,7 @@ namespace Sylves
             {
                 PlanarBound = uBound,
                 MinLayer = minLayer,
-                MaxLayer = maxLayer + 1,
+                MexLayer = maxLayer + 1,
             };
         }
 
@@ -543,7 +548,7 @@ namespace Sylves
             var planarPrismBound = (PlanarPrismBound)bound;
             foreach (var uCell in underlying.GetCellsInBounds(planarPrismBound.PlanarBound))
             {
-                for (var layer = planarPrismBound.MinLayer; layer < planarPrismBound.MaxLayer; layer++)
+                for (var layer = planarPrismBound.MinLayer; layer < planarPrismBound.MexLayer; layer++)
                 {
                     yield return Combine(uCell, layer);
                 }
@@ -554,7 +559,7 @@ namespace Sylves
             if (bound is PlanarPrismBound ppb)
             {
                 var (uCell, layer) = Split(cell);
-                return Underlying.IsCellInBound(uCell, ppb.PlanarBound) && ppb.MinLayer <= layer && layer < ppb.MaxLayer;
+                return Underlying.IsCellInBound(uCell, ppb.PlanarBound) && ppb.MinLayer <= layer && layer < ppb.MexLayer;
             }
             else
             {
@@ -570,7 +575,7 @@ namespace Sylves
                 {
                     return Aabb.FromMinMax(
                         aabb.Min + GetOffset(ppb.MinLayer),
-                        aabb.Max + GetOffset(ppb.MaxLayer));
+                        aabb.Max + GetOffset(ppb.MexLayer));
                 }
             }
             return null;
@@ -715,7 +720,7 @@ namespace Sylves
                 else
                 {
                     minLayer = Math.Min(layer, minLayer);
-                    maxLayer = Math.Min(layer, maxLayer);
+                    maxLayer = Math.Max(layer, maxLayer);
                 }
             }
             if (first)
@@ -736,7 +741,7 @@ namespace Sylves
             }
             var layer = GetLayer(position);
             cell = Combine(uCell, layer);
-            return bound == null ? true : bound.MinLayer <= layer && layer < bound.MaxLayer;
+            return bound == null ? true : bound.MinLayer <= layer && layer < bound.MexLayer;
         }
 
         public virtual bool FindCell(
@@ -764,7 +769,7 @@ namespace Sylves
                     return false;
                 }
                 rotation = cubeRotation.Value;
-                return bound == null ? true : bound.MinLayer <= layer && layer < bound.MaxLayer;
+                return bound == null ? true : bound.MinLayer <= layer && layer < bound.MexLayer;
             }
             else
             {
@@ -775,7 +780,7 @@ namespace Sylves
                     rotation = default;
                     return false;
                 }
-                return bound == null ? true : bound.MinLayer <= layer && layer < bound.MaxLayer;
+                return bound == null ? true : bound.MinLayer <= layer && layer < bound.MexLayer;
             }
         }
 
@@ -786,7 +791,7 @@ namespace Sylves
             if(bound != null)
             {
                 minLayer = Math.Max(minLayer, bound.MinLayer);
-                maxLayer = Math.Min(maxLayer, bound.MaxLayer - 1);
+                maxLayer = Math.Min(maxLayer, bound.MexLayer - 1);
             }
 
             foreach (var uCell in underlying.GetCellsIntersectsApprox(GetPlanarPosition(min), GetPlanarPosition(max)))
@@ -833,7 +838,7 @@ namespace Sylves
 
                         currentLayer += layerStep;
 
-                        if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MaxLayer))
+                        if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MexLayer))
                             yield break;
 
                         yield return new RaycastInfo
@@ -848,7 +853,7 @@ namespace Sylves
 
                 currentLayer = layerAtT;
 
-                if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MaxLayer))
+                if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MexLayer))
                     yield break;
 
                 var prismInfo = PrismInfo.Get(underlying.GetCellType(info.cell));
@@ -882,7 +887,7 @@ namespace Sylves
 
                     currentLayer += layerStep;
 
-                    if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MaxLayer))
+                    if (bound != null && (currentLayer < bound.MinLayer || currentLayer >= bound.MexLayer))
                         yield break;
 
                     yield return new RaycastInfo
@@ -954,7 +959,7 @@ namespace Sylves
             {
                 PlanarBound = destPlanarBound,
                 MinLayer = planarPrismBound.MinLayer + layerOffset,
-                MaxLayer = planarPrismBound.MaxLayer + layerOffset,
+                MexLayer = planarPrismBound.MexLayer + layerOffset,
             };
             return true;
         }

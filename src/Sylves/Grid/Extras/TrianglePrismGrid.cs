@@ -24,7 +24,7 @@ namespace Sylves
             base(
                 new BijectModifier(new TriangleGrid(new Vector2(cellSize.x, cellSize.y), orientation, bound?.triangleBound), ToTriangleGrid, FromTriangleGrid, 2),
                 new PlanarPrismOptions {LayerHeight = cellSize.z },
-                bound == null ? null : new PlanarPrismBound { PlanarBound = bound.triangleBound, MinLayer = bound.layerMin, MaxLayer = bound.layerMax }
+                bound == null ? null : new PlanarPrismBound { PlanarBound = bound.triangleBound, MinLayer = bound.layerMin, MexLayer = bound.layerMax }
             )
         {
         }

@@ -106,7 +106,7 @@ namespace Sylves
             var dualGrid = new PlanarPrismModifier(
                 new BijectModifier(triangleGrid, TrianglePrismGrid.ToTriangleGrid, TrianglePrismGrid.FromTriangleGrid, 2),
                 new PlanarPrismOptions { LayerHeight = cellSize.z, LayerOffset = -0.5f * cellSize.z },
-                bound == null ? null : new PlanarPrismBound { PlanarBound = triangleBound, MinLayer = bound.LayerMin, MaxLayer = bound.LayerMex + 1 }
+                bound == null ? null : new PlanarPrismBound { PlanarBound = triangleBound, MinLayer = bound.LayerMin, MexLayer = bound.LayerMex + 1 }
             );
             return new DualMapping(this, dualGrid, dm);
         }

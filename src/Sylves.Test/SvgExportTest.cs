@@ -607,11 +607,11 @@ namespace Sylves.Test
             ExportObj(new MobiusSquareGrid(10, 10), "mobiussquare.obj");
             ExportObj(new CubiusGrid(8, 2), "cubius.obj");
             var cairoBound = new SquareBound(-3, -3, 3, 3);
-            ExportObj(new PlanarPrismModifier(new RavelModifier(new CairoGrid().BoundBy(cairoBound)), new PlanarPrismOptions { LayerHeight = 0.24f, }).BoundBy(new PlanarPrismBound { PlanarBound = cairoBound, MinLayer = 0, MaxLayer = 1}), "planarprismmodifier.obj");
+            ExportObj(new PlanarPrismModifier(new RavelModifier(new CairoGrid().BoundBy(cairoBound)), new PlanarPrismOptions { LayerHeight = 0.24f, }).BoundBy(new PlanarPrismBound { PlanarBound = cairoBound, MinLayer = 0, MexLayer = 1}), "planarprismmodifier.obj");
             var ico = TestMeshes.Icosahedron;
             ico.RecalculateNormals();
             ExportObj(new MeshPrismGrid(ico, new MeshPrismGridOptions { LayerHeight = 0.25f }), "meshprism.obj");
-            ExportObj(new PlanarPrismModifier(new TownscaperGrid(4).GetCompactGrid()).BoundBy(new PlanarPrismBound { MinLayer=0, MaxLayer = 2, PlanarBound=new SquareBound(0, 0, 3, 3)}), "townscaper_layers.obj");
+            ExportObj(new PlanarPrismModifier(new TownscaperGrid(4).GetCompactGrid()).BoundBy(new PlanarPrismBound { MinLayer=0, MexLayer = 2, PlanarBound=new SquareBound(0, 0, 3, 3)}), "townscaper_layers.obj");
             var rng = new System.Random(0);
             var points = Enumerable.Range(0, 100).Select(_ =>
             {
