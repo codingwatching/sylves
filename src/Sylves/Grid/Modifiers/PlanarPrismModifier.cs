@@ -57,8 +57,8 @@ namespace Sylves
         private readonly PlanarPrismOptions planarPrismOptions;
         private readonly PlanarPrismBound bound;
 
-        public PlanarPrismModifier(IGrid underlying, PlanarPrismOptions planarPrismOptions, int minLayer, int maxLayer)
-            : this(underlying, planarPrismOptions, new PlanarPrismBound { MinLayer = minLayer, MexLayer = maxLayer, PlanarBound = null })
+        public PlanarPrismModifier(IGrid underlying, PlanarPrismOptions planarPrismOptions, int minLayer, int mexLayer)
+            : this(underlying, planarPrismOptions, new PlanarPrismBound { MinLayer = minLayer, MexLayer = mexLayer, PlanarBound = null })
         {
         }
 
