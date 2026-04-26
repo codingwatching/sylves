@@ -491,13 +491,19 @@ namespace Sylves.Test
         }
 
         [Test]
-        [Ignore("slow!")]
+        //[Ignore("slow!")]
         public void ExportSvgGrids_ExtrasGrids()
         {
-            Export(new TownscaperGrid(4).BoundBy(new SquareBound(new Vector2Int(-3, -3), new Vector2Int(3, 3))).Transformed(Matrix4x4.Scale(Vector3.one * 0.3f)), "townscaper.svg", new Options { textScale = null, strokeWidth = 0.01f, });
-            Export(new TownscaperGrid(4, 0).BoundBy(new SquareBound(new Vector2Int(-2, -2), new Vector2Int(3, 3))).Transformed(Matrix4x4.Scale(Vector3.one * 0.3f)), "unrelaxedtownscaper.svg", new Options { textScale = null, strokeWidth = 0.01f, });
-            Export(new OffGrid(0.2f, new SquareBound(-4, -4, 5, 5)), "off.svg", new Options { textScale = 0.5f, min = new Vector2(-3, -3), max = new Vector2(3, 3)});
-            Export(new ModHexGrid(1f, new EisensteinInteger(3, 2)), "modhex.svg", new Options { includeUnwrapped=true, textScale = 0.5f, min = new Vector2(-3, -3), max = new Vector2(3, 3)});
+            //Export(new TownscaperGrid(4).BoundBy(new SquareBound(new Vector2Int(-3, -3), new Vector2Int(3, 3))).Transformed(Matrix4x4.Scale(Vector3.one * 0.3f)), "townscaper.svg", new Options { textScale = null, strokeWidth = 0.01f, });
+            //Export(new TownscaperGrid(4, 0).BoundBy(new SquareBound(new Vector2Int(-2, -2), new Vector2Int(3, 3))).Transformed(Matrix4x4.Scale(Vector3.one * 0.3f)), "unrelaxedtownscaper.svg", new Options { textScale = null, strokeWidth = 0.01f, });
+            //Export(new OffGrid(0.2f, new SquareBound(-4, -4, 5, 5)), "off.svg", new Options { textScale = 0.5f, min = new Vector2(-3, -3), max = new Vector2(3, 3)});
+            //Export(new ModHexGrid(1f, new EisensteinInteger(3, 2)), "modhex.svg", new Options { includeUnwrapped=true, textScale = 0.5f, min = new Vector2(-3, -3), max = new Vector2(3, 3)});
+            var squarePeriodic = new PeriodicPlanarMeshGrid(
+                new SquareGrid(1, new SquareBound(0, 0, 1, 1)).ToMeshData(),
+                new Vector2(1, 0),
+                new Vector2(0, 1));
+            var spiralGrid = new SpiralGrid(squarePeriodic, 12, 12).BoundBy(new SquareBound(-20, -20, 20, 20));
+            Export(spiralGrid, "spiral.svg", new Options { textScale = null, min = new Vector2(-8, -8), max = new Vector2(8, 8), trim = true, fillFunc = c => (PMod(c.z+c.y,2) == 0 ? "#00a2e8" : "#fff200") });
         }
 
         [Test]
