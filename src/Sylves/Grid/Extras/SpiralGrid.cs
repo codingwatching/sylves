@@ -8,10 +8,17 @@ using UnityEngine;
 namespace Sylves
 {
     /// <summary>
-    /// Grid wrapper that remaps periodic planar coordinates onto a spiral domain.
+    /// Modifies any PeriodicPlanarGrid into a exponential spiral variant. 
+    /// Uses the complex exponential function, see https://www.youtube.com/watch?v=ldxFjLJ3rVY.
     /// </summary>
     public class SpiralGrid : BaseModifier
     {
+        /// <summary>
+        /// Creates a new SpiralGrid from a PeriodicPlanarMeshGrid.
+        /// The resulting grid is composed of two interlocking spirals.
+        /// N1, N2 control the number of turns in the spirals: if you move N1 steps along one spiral, and then N2 steps along the second spiral, you get back to where you started.
+        /// Thus, (0, N2) makes the spirals dengenerate: one is a series of rings, and the other radial lines.
+        /// </summary>
         public SpiralGrid(PeriodicPlanarMeshGrid r, int N1, int N2) : base(MakeUnderlying(r, N1, N2))
         {
             this.N1 = N1;
@@ -26,16 +33,20 @@ namespace Sylves
 
         private static IGrid MakeUnderlying(PeriodicPlanarMeshGrid r, int N1, int N2)
         {
-            
+
             if (r == null)
                 throw new ArgumentNullException(nameof(r));
-            if (N2 <= 0)
-                throw new ArgumentOutOfRangeException(nameof(N2), "N2 must be positive.");
+            if (N2 <= 0 && N1 <= 0)
+            {
+                N1 = -N1;
+                N2 = -N2;
+            }
+            if (N1 == 0 && N2 == 0)
+                throw new ArgumentOutOfRangeException(nameof(N2), "N2 or N1 must be non-zero.");
 
-            var masked = r.Masked(cell => cell.z >= 0 && cell.z < N2);
 
-            var c0 = masked.GetCellCenter(new Cell(0, 0, 0));
-            var c1 = masked.GetCellCenter(new Cell(0, N1, N2));
+            var c0 = r.GetCellCenter(new Cell(0, 0, 0));
+            var c1 = r.GetCellCenter(new Cell(0, N1, N2));
             var desired = new Vector3(0, 2 * Mathf.PI, 0);
             var delta = c1 - c0;
             var deltaMagnitude = delta.magnitude;
@@ -45,13 +56,29 @@ namespace Sylves
             var rotation = FromToRotation(delta, desired);
             var scale = desired.magnitude / deltaMagnitude;
             var alignment = Matrix4x4.Scale(new Vector3(scale, scale, scale)) * Matrix4x4.Rotate(rotation) * Matrix4x4.Translate(-c0);
-            var transformed = masked.Transformed(alignment);
 
-            return new WrapModifier(transformed, cell =>
+            if (N2 > 0)
             {
-                var k = -(int)Math.Floor((double)cell.z / N2);
-                return new Cell(cell.x, cell.y + k * N1, cell.z + k * N2);
-            });
+                var masked = r.Masked(cell => cell.z >= 0 && cell.z < N2);
+                var wrapped = new WrapModifier(masked, cell =>
+                {
+                    var k = -(int)Math.Floor((double)cell.z / N2);
+                    return new Cell(cell.x, cell.y + k * N1, cell.z + k * N2);
+                });
+                var transformed = wrapped.Transformed(alignment);
+                return transformed;
+            }
+            else
+            {
+                var masked = r.Masked(cell => cell.y >= 0 && cell.y < N1);
+                var wrapped = new WrapModifier(masked, cell =>
+                {
+                    var k = -(int)Math.Floor((double)cell.y / N1);
+                    return new Cell(cell.x, cell.y + k * N1, cell.z + k * N2);
+                });
+                var transformed = wrapped.Transformed(alignment);
+                return transformed;
+            }
         }
 
         protected override IGrid Rebind(IGrid underlying)
@@ -191,7 +218,7 @@ namespace Sylves
             var transformed = Transform(uTRS.Position);
             GetTransformJacobi(uTRS.Position, out var jacobi);
             var jTRS = new TRS(jacobi);
-            var  x = jTRS * uTRS;
+            var x = jTRS * uTRS;
             return new TRS(transformed, x.Rotation, x.Scale);
         }
 
@@ -213,7 +240,7 @@ namespace Sylves
         {
             Underlying.GetPolygon(cell, out var uVertices, out var uTransform);
             vertices = new Vector3[uVertices.Length];
-            for(var i = 0; i < vertices.Length; i++)
+            for (var i = 0; i < vertices.Length; i++)
             {
                 vertices[i] = Transform(uTransform.MultiplyPoint(uVertices[i]));
             }

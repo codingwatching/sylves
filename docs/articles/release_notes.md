@@ -1,8 +1,9 @@
 # Unreleased
 * Added [HexRect](xref:Svyles.HexRect)
+* Added [SpiralGrid](xref:Sylves.SpiralGrid)
+* Added [ModHexGrid](xref:Sylves.ModHexGrid)
 * Some calls to GetCellCorner are now more efficient
 * Some fixes for CompoundGrid.
-* Added [ModHexGrid](xref:Sylves.ModHexGrid)
 * [Fix](https://github.com/BorisTheBrave/sylves/issues/6) GetChildTriangles for pointy topped hex grids.
 * Fix MeshPrismGrid.GetCellCorner.
 * Fixes for XZModifier

@@ -498,12 +498,18 @@ namespace Sylves.Test
             //Export(new TownscaperGrid(4, 0).BoundBy(new SquareBound(new Vector2Int(-2, -2), new Vector2Int(3, 3))).Transformed(Matrix4x4.Scale(Vector3.one * 0.3f)), "unrelaxedtownscaper.svg", new Options { textScale = null, strokeWidth = 0.01f, });
             //Export(new OffGrid(0.2f, new SquareBound(-4, -4, 5, 5)), "off.svg", new Options { textScale = 0.5f, min = new Vector2(-3, -3), max = new Vector2(3, 3)});
             //Export(new ModHexGrid(1f, new EisensteinInteger(3, 2)), "modhex.svg", new Options { includeUnwrapped=true, textScale = 0.5f, min = new Vector2(-3, -3), max = new Vector2(3, 3)});
-            var squarePeriodic = new PeriodicPlanarMeshGrid(
-                new SquareGrid(1, new SquareBound(0, 0, 1, 1)).ToMeshData(),
-                new Vector2(1, 0),
-                new Vector2(0, 1));
-            var spiralGrid = new SpiralGrid(squarePeriodic, 12, 12).BoundBy(new SquareBound(-20, -20, 20, 20));
-            Export(spiralGrid, "spiral.svg", new Options { textScale = null, min = new Vector2(-8, -8), max = new Vector2(8, 8), trim = true, fillFunc = c => (PMod(c.z+c.y,2) == 0 ? "#00a2e8" : "#fff200") });
+            var spiralGrid = new SpiralGrid(new SquareGrid(1).ToPeriodicPlanarMeshGrid(), 12, 12).BoundBy(new SquareBound(-20, -20, 20, 20));
+            Export(spiralGrid, "spiral.svg", new Options { textScale = null, min = new Vector2(-8, -8), max = new Vector2(8, 8), trim = true });
+            //Export(spiralGrid, "spiral.svg", new Options { textScale = null, min = new Vector2(-8, -8), max = new Vector2(8, 8), trim = true, fillFunc = c => PMod(c.z+c.y,2) == 0 ? "#00a2e8" : "#fff200" });
+            spiralGrid = new SpiralGrid(new HexGrid(1, HexOrientation.PointyTopped).ToPeriodicPlanarMeshGrid(), 7, 13).BoundBy(new SquareBound(-30, -20, 30, 20));
+            var hexColors = new[] { "#fff200", "#b5e61d", "#99d9ea" };
+            Export(spiralGrid, "spiral_hex.svg", new Options { textScale = null, min = new Vector2(-8, -8), max = new Vector2(8, 8), trim = true, fillFunc = c => hexColors[PMod(c.z+2*c.y,3)]});
+            spiralGrid = new SpiralGrid(new SquareGrid(1).ToPeriodicPlanarMeshGrid(), 8, 9).BoundBy(new SquareBound(-10, -10, 20, 10));
+            var colors2 = new[] { "#fff200", "#b5e61d", "#99d9ea", "#00a2e8", "#ed1c24", "#b31602", };
+            Export(spiralGrid, "spiral2.svg", new Options { textScale = null, min = new Vector2(-8, -8), max = new Vector2(8, 8), trim = true, fillFunc = c => colors2[PMod(c.y, 2) + PMod(c.z, 3) * 2] });
+            spiralGrid = new SpiralGrid(new CairoGrid(), 4, 4).BoundBy(new SquareBound(-10, -10, 20, 10));
+            var octagonColors = new[] { "#fff200", "#b5e61d", "#99d9ea", "#00a2e8", "#a349a4", "#ed1c24", "#ff7f27", "#ffc90e" };
+            Export(spiralGrid, "spiral3.svg", new Options { textScale = null, min = new Vector2(-8, -8), max = new Vector2(8, 8), trim = true, fillFunc = c => octagonColors[c.x + PMod(c.y+c.z, 2) * 4] });
         }
 
         [Test]
