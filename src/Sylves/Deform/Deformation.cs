@@ -252,37 +252,60 @@ namespace Sylves
 
         public static Deformation operator *(Deformation d1, Deformation d2)
         {
+            // d1 * d2 corresponds to:
+            // post1 * inner1 * pre1 * post2 * inner2 * pre2
+            // We preserve pre2 as output pre, post1 as output post, and fold pre1 * post2 into the new inner funcs.
+            var middle = d1.PreDeform * d2.PostDeform;
+            var middleIT = d1.PreDeformIT * d2.PostDeformIT;
+
             Vector3 DeformPoint(Vector3 p)
             {
-                return d1.DeformPoint(d2.DeformPoint(p));
+                var p2 = d2.InnerDeformPoint(p);
+                return d1.InnerDeformPoint(middle.MultiplyPoint3x4(p2));
             }
 
             Vector3 DeformNormal(Vector3 p, Vector3 n)
             {
-                var p2 = d2.DeformPoint(p);
-                var n2 = d2.DeformNormal(p, n);
-                return d1.DeformNormal(p2, n2);
+                var p2 = d2.InnerDeformPoint(p);
+                var n2 = d2.InnerDeformNormal(p, n);
+                var p3 = middle.MultiplyPoint3x4(p2);
+                var n3 = middleIT.MultiplyVector(n2);
+                return d1.InnerDeformNormal(p3, n3);
             }
 
             Vector4 DeformTangent(Vector3 p, Vector4 t)
             {
-                var p2 = d2.DeformPoint(p);
-                var t2 = d2.DeformTangent(p, t);
-                return d1.DeformTangent(p2, t2);
+                var p2 = d2.InnerDeformPoint(p);
+                var t2 = d2.InnerDeformTangent(p, t);
+                var t2v = middle.MultiplyVector(new Vector3(t2.x, t2.y, t2.z));
+                var t3 = new Vector4(t2v.x, t2v.y, t2v.z, t2.w);
+                var p3 = middle.MultiplyPoint3x4(p2);
+                return d1.InnerDeformTangent(p3, t3);
             }
 
             void GetJacobi(Vector3 p, out Matrix4x4 j)
             {
-                var p2 = d2.DeformPoint(p);
-                d1.GetJacobi(p2, out var j1);
-                d2.GetJacobi(p, out var j2);
-                var x = j1.MultiplyVector(j2.MultiplyVector(Vector3.right));
-                var y = j1.MultiplyVector(j2.MultiplyVector(Vector3.up));
-                var z = j1.MultiplyVector(j2.MultiplyVector(Vector3.forward));
+                d2.InnerGetJacobi(p, out var j2);
+                var p2 = VectorUtils.ToVector3(j2.GetColumn(3));
+                var p3 = middle.MultiplyPoint3x4(p2);
+                d1.InnerGetJacobi(p3, out var j1);
+                var x = j1.MultiplyVector(middle.MultiplyVector(j2.MultiplyVector(Vector3.right)));
+                var y = j1.MultiplyVector(middle.MultiplyVector(j2.MultiplyVector(Vector3.up)));
+                var z = j1.MultiplyVector(middle.MultiplyVector(j2.MultiplyVector(Vector3.forward)));
                 j = VectorUtils.ToMatrix(x, y, z, DeformPoint(p));
             }
 
-            return new Deformation(DeformPoint, DeformNormal, DeformTangent, GetJacobi, d1.InvertWinding ^ d2.InvertWinding);
+            var invertWinding =
+                d1.InnerInvertWinding ^
+                d2.InnerInvertWinding ^
+                (d1.PreDeform.determinant < 0) ^
+                (d2.PostDeform.determinant < 0);
+            var r = new Deformation(DeformPoint, DeformNormal, DeformTangent, GetJacobi, invertWinding);
+            r.PreDeform = d2.PreDeform;
+            r.PreDeformIT = d2.PreDeformIT;
+            r.PostDeform = d1.PostDeform;
+            r.PostDeformIT = d1.PostDeformIT;
+            return r;
         }
     }
 }

@@ -137,5 +137,62 @@ namespace Sylves.Test
             right.GetJacobi(AssociativityPoint, out var rightJ);
             AssertAreEqual(leftJ, rightJ, Epsilon);
         }
+
+        [Test]
+        public void TestCompositionCarriesOuterPreAndPost()
+        {
+            var pre2 = Matrix4x4.TRS(new Vector3(-2.1f, 0.3f, 1.4f), Quaternion.Euler(5, -12, 18), new Vector3(1.1f, 0.8f, 1.2f));
+            var post2 = Matrix4x4.TRS(new Vector3(3.2f, -0.7f, 0.2f), Quaternion.Euler(7, 22, -9), new Vector3(0.9f, 1.3f, 1.0f));
+            var pre1 = Matrix4x4.TRS(new Vector3(1.4f, -2.2f, 0.5f), Quaternion.Euler(-15, 30, 10), new Vector3(1.0f, 1.1f, 0.7f));
+            var post1 = Matrix4x4.TRS(new Vector3(-0.5f, 1.6f, 2.3f), Quaternion.Euler(12, -8, 25), new Vector3(1.4f, 0.85f, 1.15f));
+
+            var inner1 = new Deformation(
+                p => new Vector3(p.x + 0.5f * p.y, p.y - 0.25f * p.z, p.z),
+                (Vector3 p, out Matrix4x4 j) => j = VectorUtils.ToMatrix(
+                    new Vector3(1, 0, 0),
+                    new Vector3(0.5f, 1, 0),
+                    new Vector3(0, -0.25f, 1),
+                    new Vector3(p.x + 0.5f * p.y, p.y - 0.25f * p.z, p.z)),
+                false);
+            var d1 = post1 * (inner1 * pre1);
+
+            var inner2 = new Deformation(
+                p => new Vector3(2 * p.x, p.y + p.z, 0.5f * p.z),
+                (Vector3 p, out Matrix4x4 j) => j = VectorUtils.ToMatrix(
+                    new Vector3(2, 0, 0),
+                    new Vector3(0, 1, 0),
+                    new Vector3(0, 1, 0.5f),
+                    new Vector3(2 * p.x, p.y + p.z, 0.5f * p.z)),
+                false);
+            var d2 = post2 * (inner2 * pre2);
+
+            var composed = d1 * d2;
+            AssertAreEqual(pre2, composed.PreDeform, Epsilon);
+            AssertAreEqual(pre2.inverse.transpose, composed.PreDeformIT, Epsilon);
+            AssertAreEqual(post1, composed.PostDeform, Epsilon);
+            AssertAreEqual(post1.inverse.transpose, composed.PostDeformIT, Epsilon);
+
+            var p = new Vector3(0.4f, -1.9f, 2.7f);
+            var n = new Vector3(-0.3f, 0.8f, 0.5f).normalized;
+            var t = new Vector4(0.7f, 0.2f, -0.4f, -1);
+
+            AssertAreEqual(d1.DeformPoint(d2.DeformPoint(p)), composed.DeformPoint(p), Epsilon);
+            AssertAreEqual(d1.DeformNormal(d2.DeformPoint(p), d2.DeformNormal(p, n)), composed.DeformNormal(p, n), Epsilon);
+
+            var expectedTangent = d1.DeformTangent(d2.DeformPoint(p), d2.DeformTangent(p, t));
+            var actualTangent = composed.DeformTangent(p, t);
+            AssertAreEqual(new Vector3(expectedTangent.x, expectedTangent.y, expectedTangent.z), new Vector3(actualTangent.x, actualTangent.y, actualTangent.z), Epsilon);
+            Assert.AreEqual(expectedTangent.w, actualTangent.w, TangentWPrecision);
+
+            d1.GetJacobi(d2.DeformPoint(p), out var j1);
+            d2.GetJacobi(p, out var j2);
+            var expectedJacobi = VectorUtils.ToMatrix(
+                j1.MultiplyVector(j2.MultiplyVector(Vector3.right)),
+                j1.MultiplyVector(j2.MultiplyVector(Vector3.up)),
+                j1.MultiplyVector(j2.MultiplyVector(Vector3.forward)),
+                d1.DeformPoint(d2.DeformPoint(p)));
+            composed.GetJacobi(p, out var actualJacobi);
+            AssertAreEqual(expectedJacobi, actualJacobi, Epsilon);
+        }
     }
 }
