@@ -249,5 +249,40 @@ namespace Sylves
             r.PostDeformIT = m.inverse.transpose * r.PostDeformIT;
             return r;
         }
+
+        public static Deformation operator *(Deformation d1, Deformation d2)
+        {
+            Vector3 DeformPoint(Vector3 p)
+            {
+                return d1.DeformPoint(d2.DeformPoint(p));
+            }
+
+            Vector3 DeformNormal(Vector3 p, Vector3 n)
+            {
+                var p2 = d2.DeformPoint(p);
+                var n2 = d2.DeformNormal(p, n);
+                return d1.DeformNormal(p2, n2);
+            }
+
+            Vector4 DeformTangent(Vector3 p, Vector4 t)
+            {
+                var p2 = d2.DeformPoint(p);
+                var t2 = d2.DeformTangent(p, t);
+                return d1.DeformTangent(p2, t2);
+            }
+
+            void GetJacobi(Vector3 p, out Matrix4x4 j)
+            {
+                var p2 = d2.DeformPoint(p);
+                d1.GetJacobi(p2, out var j1);
+                d2.GetJacobi(p, out var j2);
+                var x = j1.MultiplyVector(j2.MultiplyVector(Vector3.right));
+                var y = j1.MultiplyVector(j2.MultiplyVector(Vector3.up));
+                var z = j1.MultiplyVector(j2.MultiplyVector(Vector3.forward));
+                j = VectorUtils.ToMatrix(x, y, z, DeformPoint(p));
+            }
+
+            return new Deformation(DeformPoint, DeformNormal, DeformTangent, GetJacobi, d1.InvertWinding ^ d2.InvertWinding);
+        }
     }
 }
