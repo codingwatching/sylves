@@ -194,5 +194,74 @@ namespace Sylves.Test
             composed.GetJacobi(p, out var actualJacobi);
             AssertAreEqual(expectedJacobi, actualJacobi, Epsilon);
         }
+
+        [Test]
+        public void TestDeformMeshDataAndOperator()
+        {
+            var meshData = new MeshData
+            {
+                vertices = new[]
+                {
+                    new Vector3(0, 0, 0),
+                    new Vector3(1, 0, 0),
+                    new Vector3(0, 1, 0),
+                },
+                normals = new[]
+                {
+                    Vector3.forward,
+                    Vector3.forward,
+                    Vector3.forward,
+                },
+                tangents = new[]
+                {
+                    new Vector4(1, 0, 0, 1),
+                    new Vector4(1, 0, 0, -1),
+                    new Vector4(1, 0, 0, 1),
+                },
+                uv = new[]
+                {
+                    new Vector2(0, 0),
+                    new Vector2(1, 0),
+                    new Vector2(0, 1),
+                },
+                indices = new[] { new[] { 0, 1, 2 } },
+                topologies = new[] { MeshTopology.Triangles },
+            };
+
+            var transform = Matrix4x4.TRS(
+                new Vector3(2, -3, 5),
+                Quaternion.Euler(20, 40, -10),
+                new Vector3(1.5f, 0.7f, 2.0f));
+            var d = MakeAffineDeformation(transform, invertWinding: true);
+
+            var actual = d * meshData;
+
+            Assert.AreEqual(meshData.vertices.Length, actual.vertices.Length);
+            for (var i = 0; i < meshData.vertices.Length; i++)
+            {
+                AssertAreEqual(d.DeformPoint(meshData.vertices[i]), actual.vertices[i], Epsilon);
+            }
+
+            Assert.AreEqual(meshData.normals.Length, actual.normals.Length);
+            for (var i = 0; i < meshData.normals.Length; i++)
+            {
+                AssertAreEqual(d.DeformNormal(meshData.vertices[i], meshData.normals[i]), actual.normals[i], Epsilon);
+            }
+
+            Assert.AreEqual(meshData.tangents.Length, actual.tangents.Length);
+            for (var i = 0; i < meshData.tangents.Length; i++)
+            {
+                var expected = d.DeformTangent(meshData.vertices[i], meshData.tangents[i]);
+                var actualTangent = actual.tangents[i];
+                AssertAreEqual(new Vector3(expected.x, expected.y, expected.z), new Vector3(actualTangent.x, actualTangent.y, actualTangent.z), Epsilon);
+                Assert.AreEqual(expected.w, actualTangent.w, TangentWPrecision);
+            }
+
+            Assert.AreEqual(meshData.indices[0][0], actual.indices[0][2]);
+            Assert.AreEqual(meshData.indices[0][1], actual.indices[0][1]);
+            Assert.AreEqual(meshData.indices[0][2], actual.indices[0][0]);
+            Assert.AreEqual(meshData.topologies[0], actual.topologies[0]);
+            Assert.AreEqual(meshData.uv[1], actual.uv[1]);
+        }
     }
 }

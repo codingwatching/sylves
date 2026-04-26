@@ -139,7 +139,65 @@ namespace Sylves
             return j;
         }
 
-// TODO: Operate on MeshData isntead?
+        /// <summary>
+        /// Deforms the vertices, normals and tangents of a mesh data object as specified.
+        /// </summary>
+        public MeshData Deform(MeshData meshData)
+        {
+            // Copy deformed data
+            var vertices = meshData.vertices;
+            var vertexCount = vertices.Length;
+            var newVertices = new Vector3[vertexCount];
+            for (var i = 0; i < vertexCount; i++)
+            {
+                var p = vertices[i];
+                newVertices[i] = DeformPoint(p);
+            }
+
+            var normals = meshData.normals;
+            Vector3[] newNormals = null;
+            if (normals != null)
+            {
+                var normalCount = normals.Length;
+                newNormals = new Vector3[normalCount];
+                for (var i = 0; i < vertexCount; i++)
+                {
+                    var p = vertices[i];
+                    if (i < normalCount)
+                    {
+                        newNormals[i] = DeformNormal(p, normals[i]);
+                    }
+                }
+            }
+
+            var tangents = meshData.tangents;
+            Vector4[] newTangents = null;
+            if (tangents != null)
+            {
+                var tangentCount = tangents.Length;
+                newTangents = new Vector4[tangentCount];
+                for (var i = 0; i < vertexCount; i++)
+                {
+                    var p = vertices[i];
+                    if (i < tangentCount)
+                    {
+                        newTangents[i] = DeformTangent(p, tangents[i]);
+                    }
+                }
+            }
+
+            var indices = InvertWinding ? meshData.InvertWinding().indices : meshData.indices;
+            return new MeshData
+            {
+                indices = indices.Select(x => x.ToArray()).ToArray(),
+                topologies = meshData.topologies.ToArray(),
+                vertices = newVertices,
+                uv = meshData.uv?.ToArray(),
+                normals = newNormals,
+                tangents = newTangents,
+            };
+        }
+
 #if UNITY
         private Mesh Deform(Mesh mesh, int submeshStart, int submeshCount)
         {
@@ -306,6 +364,11 @@ namespace Sylves
             r.PostDeform = d1.PostDeform;
             r.PostDeformIT = d1.PostDeformIT;
             return r;
+        }
+
+        public static MeshData operator *(Deformation meshDeformation, MeshData meshData)
+        {
+            return meshDeformation.Deform(meshData);
         }
     }
 }
