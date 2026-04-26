@@ -194,6 +194,18 @@ namespace Sylves
             return new CellTranslateModifier(this, (Vector3Int)cell);
         }
 
+        public PeriodicPlanarMeshGrid ToPeriodicPlanarMeshGrid()
+        {
+            var meshData = new HexGrid(cellSize, orientation, new HexBound(new Vector3Int(0, 0, 0), Vector3Int.one)).ToMeshData();
+            var baseCenter = GetCellCenter(new Cell(0, 0, 0));
+            var strideX3 = GetCellCenter(new Cell(1, 0, -1)) - baseCenter;
+            var strideY3 = GetCellCenter(new Cell(0, 1, -1)) - baseCenter;
+            return new PeriodicPlanarMeshGrid(
+                meshData,
+                new Vector2(strideX3.x, strideX3.y),
+                new Vector2(strideY3.x, strideY3.y));
+        }
+
         public Cell[] GetChildTriangles(Cell cell)
         {
             if (orientation == HexOrientation.FlatTopped)

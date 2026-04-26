@@ -198,6 +198,12 @@ namespace Sylves
             return DefaultGridImpl.Recenter(grid, cell);
         }
 
+        public PeriodicPlanarMeshGrid ToPeriodicPlanarMeshGrid()
+        {
+            var meshData = new SquareGrid(cellSize, new SquareBound(0, 0, 1, 1)).ToMeshData();
+            return new PeriodicPlanarMeshGrid(meshData, new Vector2(cellSize.x, 0), new Vector2(0, cellSize.y));
+        }
+
         #endregion
 
         #region Cell info
